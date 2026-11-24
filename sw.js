@@ -1,50 +1,85 @@
-// Cache do aplicativo Rotina para funcionamento offline e atualização em segundo plano
-const CACHE_NAME = 'rotina-cache-v1';
-const ARQUIVOS_BASE = [
-  './',
-  './index.html',
-  './manifest.webmanifest'
+const CACHE_VERSION = "nossa-rotina-v1";
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  "./icon.svg"
 ];
 
-// Pré-carrega os arquivos principais na instalação do Service Worker
-self.addEventListener('install', (event) => {
+// Instala e guarda os arquivos essenciais do aplicativo.
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ARQUIVOS_BASE))
+    caches.open(CACHE_VERSION)
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// Remove versões antigas do cache quando o Service Worker é atualizado
-self.addEventListener('activate', (event) => {
+// Ativa a versão nova e remove caches antigos deste aplicativo.
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((nomes) =>
-      Promise.all(
-        nomes
-          .filter((nome) => nome !== CACHE_NAME)
-          .map((nome) => caches.delete(nome))
-      )
-    )
+    caches.keys()
+      .then((keys) => Promise.all(
+        keys
+          .filter((key) => key.startsWith("nossa-rotina-") && key !== CACHE_VERSION)
+          .map((key) => caches.delete(key))
+      ))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Responde priorizando o cache e atualiza o cache quando houver rede
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
 
-  event.respondWith(
-    caches.match(event.request).then((respostaCache) => {
-      const buscaRede = fetch(event.request)
-        .then((respostaRede) => {
-          if (respostaRede && respostaRede.status === 200 && respostaRede.type === 'basic') {
-            const copia = respostaRede.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copia));
+  // Não interfere em operações que não sejam GET.
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+
+  // Navegação: tenta a rede para receber atualizações; sem internet, abre o index salvo.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put("./index.html", copy));
           }
-          return respostaRede;
+          return response;
         })
-        .catch(() => respostaCache);
+        .catch(() => caches.match("./index.html").then((cached) => cached || caches.match("./")))
+    );
+    return;
+  }
 
-      return respostaCache || buscaRede;
+  // Arquivos do próprio aplicativo: cache primeiro, com atualização em segundo plano.
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        const network = fetch(request).then((response) => {
+          if (response && (response.ok || response.type === "opaque")) {
+            caches.open(CACHE_VERSION).then((cache) => cache.put(request, response.clone()));
+          }
+          return response;
+        });
+        return cached || network;
+      })
+    );
+    return;
+  }
+
+  // Bibliotecas, fontes e outros recursos externos: usa o cache quando estiver offline.
+  // Na primeira abertura com internet, a resposta bem-sucedida é armazenada para uso futuro.
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).then((response) => {
+        if (response && (response.ok || response.type === "opaque")) {
+          const copy = response.clone();
+          caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      });
     })
   );
 });
