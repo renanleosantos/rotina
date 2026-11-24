@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2563eb" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="manifest" href="./manifest.json" />
+  <title>Rotina</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Tipografia principal e fundo neutro para leitura limpa no celular e no computador */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Risca suavemente o título quando a atividade está concluída */
+    .item-concluido .titulo-rotina {
+      text-decoration: line-through;
+      color: #64748b;
+    }
+
+    /* Caixa de seleção confortável ao toque */
+    .check-rotina {
+      width: 1.05rem;
+      height: 1.05rem;
+      accent-color: #2563eb;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Barra de rolagem discreta em listas internas */
+    .scroll-suave::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .scroll-suave::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    /* Rodapé estático no fim do fluxo normal da página */
+    .rodape-estatico {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #64748b;
+      padding: 0.75rem 1rem 1.25rem;
+    }
+    /* Centralização horizontal apenas no mobile (<= 768px), preservando o desktop */
+    @media (max-width: 768px) {
+      main section:first-of-type > div.flex-wrap {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      main section:first-of-type > div.flex-wrap > div:first-child {
+        justify-content: center;
+      }
+
+      main section:first-of-type > div.flex-wrap > div:last-child {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <!-- Cabeçalho com o título "Rotina" e os 5 perfis em ordem exata -->
+  <header class="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-slate-200">
+    <div class="max-w-3xl mx-auto px-3.5 py-2 flex flex-col gap-2">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-sm shrink-0">
+          R
+        </div>
+        <h1 class="text-base font-bold tracking-tight text-slate-900 leading-none">Rotina</h1>
+      </div>
+
+      <!-- Seletor de perfis: Renan, Talita, Enzo, Ester e Estela -->
+      <div
+        id="seletorPerfis"
+        role="tablist"
+        aria-label="Selecionar perfil"
+        class="grid grid-cols-5 gap-1 bg-slate-100 p-1 rounded-xl"
+      >
+        <!-- Preenchido via JavaScript -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo principal -->
+  <main class="flex-1 max-w-3xl w-full mx-auto px-3.5 py-3 space-y-2.5">
+    <!-- Bloco superior compacto: navegação de data, progresso, filtro de data e botão HOJE -->
+    <section class="bg-white rounded-2xl border border-slate-200/90 shadow-sm px-3 py-2 space-y-1.5">
+      <div class="flex items-center justify-between gap-2">
+        <button
+          id="btnDiaAnterior"
+          type="button"
+          aria-label="Dia anterior"
+          class="w-7 h-7 rounded-lg border border-slate-200 hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-semibold flex items-center justify-center shrink-0 transition"
+        >
+          ←
+        </button>
+
+        <div class="text-center flex-1 min-w-0 leading-tight">
+          <div id="textoDataPrincipal" class="text-xs sm:text-sm font-bold text-slate-900 truncate">24/11/2026</div>
+          <div id="textoDiaSemana" class="text-[11px] font-medium text-slate-500 truncate mt-0.5">Terça-feira</div>
+        </div>
+
+        <button
+          id="btnDiaSeguinte"
+          type="button"
+          aria-label="Próximo dia"
+          class="w-7 h-7 rounded-lg border border-slate-200 hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-semibold flex items-center justify-center shrink-0 transition"
+        >
+          →
+        </button>
+      </div>
+
+      <!-- Linha compacta de progresso, filtro de data e botão HOJE -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-slate-100">
+        <div class="text-[11px] font-medium text-slate-600 flex items-center gap-1.5 min-w-0">
+          <span>Progresso de <strong id="nomePerfilResumo" class="text-slate-900">Renan</strong></span>
+          <span id="contadorProgresso" class="text-slate-700 font-semibold">0 de 0 feitos (0%)</span>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <label class="flex items-center gap-1 text-[11px] font-medium text-slate-600">
+            <span>Data:</span>
+            <input
+              id="inputDataFiltro"
+              type="date"
+              class="rounded-lg border border-slate-300 px-1.5 py-0.5 text-[11px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </label>
+
+          <button
+            id="btnHoje"
+            type="button"
+            class="text-[11px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-lg transition"
+          >
+            HOJE
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra fina de progresso -->
+      <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div
+          id="barraProgresso"
+          class="h-full bg-blue-600 rounded-full transition-all duration-300"
+          style="width: 0%"
+        ></div>
+      </div>
+    </section>
+
+    <!-- ABA 1: ATIVIDADES E OCORRÊNCIAS DO DIA -->
+    <section id="painelAtividades" class="space-y-2.5">
+      <!-- Barra de abas com Atividades e Histórico compacto à direita -->
+      <div class="flex items-center gap-2">
+        <button
+          id="abaAtividades"
+          type="button"
+          class="flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow-sm transition text-left sm:text-center"
+        >
+          Atividades
+        </button>
+        <button
+          id="abaHistorico"
+          type="button"
+          class="py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition shrink-0"
+        >
+          Histórico
+        </button>
+      </div>
+
+      <!-- Cabeçalho da seção e botão/formulário para nova ocorrência -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm px-3 py-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <h2 class="text-xs sm:text-sm font-semibold text-slate-800 truncate">Atividades e ocorrências</h2>
+            <p class="text-[11px] text-slate-500 truncate">Clique no horário para editar ou adicione uma nova ocorrência.</p>
+          </div>
+          <button
+            id="btnToggleNovaOcorrencia"
+            type="button"
+            class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl shadow-sm shrink-0 transition"
+          >
+            <span>+ Nova ocorrência</span>
+          </button>
+        </div>
+
+        <!-- Formulário de nova ocorrência com seletor estilo relógio (00 a 23h, min de 5 em 5 e digitação livre) -->
+        <form id="formNovaOcorrencia" class="hidden mt-3 pt-3 border-t border-slate-100 space-y-2.5">
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+            <div class="sm:col-span-6">
+              <label for="inputTituloOcorrencia" class="block text-xs font-medium text-slate-700 mb-1">
+                Ocorrência / atividade *
+              </label>
+              <input
+                id="inputTituloOcorrencia"
+                type="text"
+                required
+                placeholder="Ex.: Oração, Consulta, Estudo..."
+                class="w-full rounded-xl border border-slate-300 px-3 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div class="sm:col-span-6">
+              <div class="flex items-center justify-between mb-1">
+                <span class="block text-xs font-medium text-slate-700">Horário (relógio ou digitação livre)</span>
+                <button
+                  id="btnLimparRelogio"
+                  type="button"
+                  class="text-[11px] text-slate-500 hover:text-slate-700"
+                >
+                  Sem horário
+                </button>
+              </div>
+
+              <div class="flex items-center gap-1.5">
+                <!-- Seletor de horas de 00 (meia-noite) até 23 -->
+                <select
+                  id="selectHoraRelogio"
+                  aria-label="Hora"
+                  class="rounded-xl border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ></select>
+                <span class="text-sm font-semibold text-slate-500">:</span>
+                <!-- Seletor de minutos de 5 em 5 (00 a 55) -->
+                <select
+                  id="selectMinutoRelogio"
+                  aria-label="Minutos de 5 em 5"
+                  class="rounded-xl border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ></select>
+                <!-- Digitação livre para minutos quebrados (ex.: 08:13) -->
+                <input
+                  id="inputHorarioLivre"
+                  type="text"
+                  inputmode="numeric"
+                  list="opcoesHorarioRelogio"
+                  aria-label="Horário livre"
+                  placeholder="Ex.: 08:13"
+                  class="flex-1 min-w-0 rounded-xl border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+          <datalist id="opcoesHorarioRelogio"></datalist>
+          <div class="flex items-center justify-end gap-2">
+            <button
+              id="btnCancelarOcorrencia"
+              type="button"
+              class="px-3 py-1 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-3.5 py-1 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition"
+            >
+              Adicionar
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Lista compacta de ocorrências e atividades -->
+      <div id="listaItensDia" class="bg-white rounded-2xl border border-slate-200/90 shadow-sm divide-y divide-slate-100">
+        <!-- Preenchido via JavaScript -->
+      </div>
+
+      <!-- Observações livres do dia -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-3 space-y-1.5">
+        <div class="flex items-center justify-between">
+          <label for="textareaObservacao" class="text-xs sm:text-sm font-semibold text-slate-800">
+            Observações do dia
+          </label>
+          <span id="statusObservacao" class="text-[11px] text-emerald-600 font-medium opacity-0 transition-opacity">
+            Salvo
+          </span>
+        </div>
+        <textarea
+          id="textareaObservacao"
+          rows="2"
+          placeholder="Escreva observações livres sobre o dia..."
+          class="w-full rounded-xl border border-slate-300 p-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+        ></textarea>
+      </div>
+    </section>
+
+    <!-- ABA 2: HISTÓRICO (ITENS CONCLUÍDOS DO DIA E REGISTROS POR DATA/PERFIL) -->
+    <section id="painelHistorico" class="hidden space-y-3">
+      <!-- Barra de abas com Atividades e Histórico compacto à direita -->
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          onclick="document.getElementById('abaAtividades').click()"
+          class="flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition text-left sm:text-center"
+        >
+          Atividades
+        </button>
+        <button
+          type="button"
+          class="py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-blue-600 text-white shadow-sm transition shrink-0"
+        >
+          Histórico
+        </button>
+      </div>
+
+      <!-- Concluídos na data selecionada -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-3.5 space-y-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="text-sm font-bold text-slate-900">
+            Concluídos em <span id="dataResumoFeitos">24/11/2026</span>
+          </h2>
+          <span id="badgeQtdFeitos" class="text-xs font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full">
+            0 feitos
+          </span>
+        </div>
+        <ul id="listaFeitosDia" class="space-y-1.5 text-sm text-slate-700">
+          <!-- Preenchido via JavaScript -->
+        </ul>
+        <div id="caixaObservacaoResumo" class="hidden pt-2.5 border-t border-slate-100">
+          <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Observação do dia</p>
+          <p id="textoObservacaoResumo" class="text-xs sm:text-sm text-slate-700 whitespace-pre-line bg-slate-50 p-2.5 rounded-xl"></p>
+        </div>
+      </div>
+
+      <!-- Histórico de dias registrados para o perfil ativo -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-3.5 space-y-2.5">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900">
+            Histórico de <span id="nomeHistoricoPerfil">Renan</span>
+          </h2>
+          <p class="text-xs text-slate-500">Toque em qualquer data salva para abrir.</p>
+        </div>
+        <div id="listaHistoricoDias" class="space-y-1.5 max-h-80 overflow-y-auto scroll-suave pr-1">
+          <!-- Preenchido via JavaScript -->
+        </div>
+      </div>
+    </section>
+  </main>
+<footer class="rodape-estatico">Desenvolvido por Renan</footer>
+  <script>
+    // =========================================================================
+    // CONFIGURAÇÃO INICIAL, PERFIS E ROTINAS BASE
+    // =========================================================================
+    const STORAGE_KEY = 'rotina_app_v1_dados';
+    const DATA_INICIAL_ISO = '2026-11-24'; // 24/11/2026 — Terça-feira
+    const PERFIS = ['Renan', 'Talita', 'Enzo', 'Ester', 'Estela'];
+
+    const DIAS_SEMANA_PT = [
+      'Domingo',
+      'Segunda-feira',
+      'Terça-feira',
+      'Quarta-feira',
+      'Quinta-feira',
+      'Sexta-feira',
+      'Sábado'
+    ];
+
+    /**
+     * Formata e normaliza horários quando possível (ex.: "8:5" -> "08:05", "19h30" -> "19:30"),
+     * mantendo digitação livre válida para horários quebrados (ex.: "08:13").
+     */
+    function normalizarHorarioTexto(valorBruto) {
+      if (typeof valorBruto !== 'string') return '';
+      const limpo = valorBruto.trim();
+      if (!limpo) return '';
+
+      const match = limpo.match(/^(\d{1,2})(?:\s*[:hH]\s*(\d{1,2}))?$/);
+      if (!match) return limpo;
+
+      const horas = Number(match[1]);
+      const minutos = match[2] !== undefined ? Number(match[2]) : 0;
+      if (horas < 0 || horas > 23 || minutos < 0 || minutos > 59) {
+        return limpo;
+      }
+
+      return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+    }
+
+    /**
+     * Popula o datalist com opções de horas de 00 (meia-noite) a 23 e minutos de 5 em 5 (00 a 55),
+     * permitindo também digitar qualquer horário quebrado manualmente.
+     */
+    function preencherOpcoesRelogio() {
+      const datalist = document.getElementById('opcoesHorarioRelogio');
+      if (!datalist || datalist.childElementCount > 0) return;
+
+      const minutosPasso5 = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
+      const fragment = document.createDocumentFragment();
+
+      for (let h = 0; h <= 23; h += 1) {
+        const hh = String(h).padStart(2, '0');
+        minutosPasso5.forEach((mm) => {
+          const opt = document.createElement('option');
+          opt.value = `${hh}:${mm}`;
+          opt.label = h === 0 && mm === '00' ? '00:00 (Meia-noite)' : `${hh}:${mm}`;
+          fragment.appendChild(opt);
+        });
+      }
+
+      datalist.appendChild(fragment);
+    }
+
+    /**
+     * Normaliza o nome do perfil e corrige grafias antigas ("Stella" -> "Estela").
+     */
+    function normalizarNomePerfil(nome) {
+      if (typeof nome !== 'string') return null;
+      const limpo = nome.trim();
+      if (!limpo) return null;
+      if (limpo.toLowerCase() === 'stella') return 'Estela';
+      const encontrado = PERFIS.find((p) => p.toLowerCase() === limpo.toLowerCase());
+      return encontrado || null;
+    }
+
+    /**
+     * Normaliza a estrutura de registros carregados do localStorage.
+     */
+    function normalizarRegistros(registrosBrutos) {
+      const normalizado = {};
+      if (!registrosBrutos || typeof registrosBrutos !== 'object') {
+        return normalizado;
+      }
+
+      Object.keys(registrosBrutos).forEach((chavePerfil) => {
+        const perfilValido = normalizarNomePerfil(chavePerfil);
+        if (!perfilValido) return;
+
+        const diasObj = registrosBrutos[chavePerfil];
+        if (!diasObj || typeof diasObj !== 'object') return;
+
+        if (!normalizado[perfilValido]) {
+          normalizado[perfilValido] = {};
+        }
+
+        Object.keys(diasObj).forEach((dataISO) => {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(dataISO)) return;
+          const diaDados = diasObj[dataISO];
+          if (!diaDados || typeof diaDados !== 'object') return;
+
+          const itensBrutos = Array.isArray(diaDados.itens) ? diaDados.itens : [];
+          const itensLimpos = itensBrutos
+            .filter((item) => item && typeof item === 'object' && typeof item.titulo === 'string')
+            .map((item, idx) => ({
+              id: typeof item.id === 'string' && item.id ? item.id : `${dataISO}-rest-${idx}`,
+              titulo: item.titulo.trim(),
+              horario: normalizarHorarioTexto(item.horario || ''),
+              observacao: typeof item.observacao === 'string' ? item.observacao : '',
+              feito: Boolean(item.feito)
+            }))
+            .filter((item) => item.titulo.length > 0);
+
+          const obsLimpa = typeof diaDados.observacao === 'string' ? diaDados.observacao : '';
+
+          if (!normalizado[perfilValido][dataISO]) {
+            normalizado[perfilValido][dataISO] = {
+              itens: ordenarItensPorHorario(itensLimpos),
+              observacao: obsLimpa
+            };
+          } else {
+            const atual = normalizado[perfilValido][dataISO];
+            if ((!atual.itens || atual.itens.length === 0) && itensLimpos.length > 0) {
+              atual.itens = ordenarItensPorHorario(itensLimpos);
+            }
+            if (!atual.observacao && obsLimpa) {
+              atual.observacao = obsLimpa;
+            }
+          }
+        });
+      });
+
+      return normalizado;
+    }
+
+    /**
+     * Converte horário para minutos desde 00:00 (0 a 1439) para ordenação cronológica.
+     * Retorna null caso não haja horário válido.
+     */
+    function extrairMinutosHorario(horario) {
+      if (!horario || typeof horario !== 'string') return null;
+      const texto = horario.trim();
+      if (!texto) return null;
+
+      const match = texto.match(/^(\d{1,2})(?:\s*[:hH]\s*(\d{1,2}))?$/);
+      if (!match) return null;
+
+      const horas = Number(match[1]);
+      const minutos = match[2] !== undefined ? Number(match[2]) : 0;
+
+      if (
+        Number.isNaN(horas) ||
+        Number.isNaN(minutos) ||
+        horas < 0 ||
+        horas > 23 ||
+        minutos < 0 ||
+        minutos > 59
+      ) {
+        return null;
+      }
+
+      return horas * 60 + minutos;
+    }
+
+    /**
+     * Ordena itens de forma estável pela hora/minuto:
+     * horários válidos ficam em ordem crescente; itens com o mesmo horário ou sem horário
+     * preservam sua ordem relativa original.
+     */
+    function ordenarItensPorHorario(itens) {
+      if (!Array.isArray(itens)) return [];
+      return itens
+        .map((item, indiceOriginal) => ({
+          item,
+          indiceOriginal,
+          minutos: extrairMinutosHorario(item.horario)
+        }))
+        .sort((a, b) => {
+          const aTemHora = a.minutos !== null;
+          const bTemHora = b.minutos !== null;
+
+          if (aTemHora && bTemHora) {
+            if (a.minutos !== b.minutos) return a.minutos - b.minutos;
+            return a.indiceOriginal - b.indiceOriginal;
+          }
+          if (aTemHora && !bTemHora) return -1;
+          if (!aTemHora && bTemHora) return 1;
+          return a.indiceOriginal - b.indiceOriginal;
+        })
+        .map((entry) => entry.item);
+    }
+
+    /**
+     * Gera a rotina base para cada perfil e dia da semana (0 = Dom ... 6 = Sáb).
+     */
+    function obterRotinaBase(perfil, diaSemana) {
+      const ehDomingo = diaSemana === 0;
+      const ehSabado = diaSemana === 6;
+
+      if (perfil === 'Renan') {
+        if (ehDomingo) {
+          return ordenarItensPorHorario([
+            { id: 'r-dom-1', titulo: 'Oração', horario: '07:30', feito: false },
+            { id: 'r-dom-2', titulo: 'Café da manhã / Corrida', horario: '07:30', feito: false },
+            { id: 'r-dom-3', titulo: 'Reunião de jovens', horario: '10:00', feito: false },
+            { id: 'r-dom-4', titulo: 'Almoço', horario: '12:00', feito: false },
+            { id: 'r-dom-5', titulo: 'Violino / Música', horario: '13:00', feito: false },
+            { id: 'r-dom-6', titulo: 'Bíblia / Livros', horario: '14:00', feito: false },
+            { id: 'r-dom-7', titulo: 'Culto / Compromisso', horario: '18:30', feito: false },
+            { id: 'r-dom-8', titulo: 'Oração e meditação', horario: '21:30', feito: false },
+            { id: 'r-dom-9', titulo: 'Dormir', horario: '22:30', feito: false }
+          ]);
+        }
+
+        if (ehSabado) {
+          return ordenarItensPorHorario([
+            { id: 'r-sab-1', titulo: 'Oração', horario: '08:00', feito: false },
+            { id: 'r-sab-2', titulo: 'Café da manhã', horario: '08:30', feito: false },
+            { id: 'r-sab-3', titulo: 'Caminhada / Corrida', horario: '09:30', feito: false },
+            { id: 'r-sab-4', titulo: 'Almoço', horario: '12:00', feito: false },
+            { id: 'r-sab-5', titulo: 'Violino / Estudo de música', horario: '14:00', feito: false },
+            { id: 'r-sab-6', titulo: 'Bíblia / Livros', horario: '15:30', feito: false },
+            { id: 'r-sab-7', titulo: 'Jantar', horario: '18:30', feito: false },
+            { id: 'r-sab-8', titulo: 'Oração e meditação', horario: '21:30', feito: false },
+            { id: 'r-sab-9', titulo: 'Dormir', horario: '22:30', feito: false }
+          ]);
+        }
+
+        return ordenarItensPorHorario([
+          { id: 'r-ut-1', titulo: 'Oração', horario: '08:00', feito: false },
+          { id: 'r-ut-2', titulo: 'Café da manhã', horario: '08:30', feito: false },
+          { id: 'r-ut-3', titulo: 'Trabalho', horario: '09:00', feito: false },
+          { id: 'r-ut-4', titulo: 'Almoço', horario: '11:00', feito: false },
+          { id: 'r-ut-5', titulo: 'Violino / Meditação', horario: '12:00', feito: false },
+          { id: 'r-ut-6', titulo: 'Trabalho', horario: '13:00', feito: false },
+          { id: 'r-ut-7', titulo: 'Café da tarde', horario: '14:00', feito: false },
+          { id: 'r-ut-8', titulo: 'Leitura da Bíblia e livros', horario: '15:00', feito: false },
+          { id: 'r-ut-9', titulo: 'Corrida', horario: '16:00', feito: false },
+          { id: 'r-ut-10', titulo: 'Jantar', horario: '18:00', feito: false },
+          { id: 'r-ut-11', titulo: 'Culto', horario: '19:00', feito: false },
+          { id: 'r-ut-12', titulo: 'Oração e meditação', horario: '21:30', feito: false },
+          { id: 'r-ut-13', titulo: 'Dormir', horario: '22:30', feito: false }
+        ]);
+      }
+
+      if (perfil === 'Talita') {
+        if (ehDomingo) {
+          return ordenarItensPorHorario([
+            { id: 't-dom-1', titulo: 'Oração e devocional', horario: '08:00', feito: false },
+            { id: 't-dom-2', titulo: 'Café da manhã', horario: '08:30', feito: false },
+            { id: 't-dom-3', titulo: 'Reunião / Culto', horario: '10:00', feito: false },
+            { id: 't-dom-4', titulo: 'Almoço em família', horario: '12:30', feito: false },
+            { id: 't-dom-5', titulo: 'Leitura / Descanso', horario: '15:00', feito: false },
+            { id: 't-dom-6', titulo: 'Jantar', horario: '19:00', feito: false },
+            { id: 't-dom-7', titulo: 'Dormir', horario: '22:30', feito: false }
+          ]);
+        }
+        return ordenarItensPorHorario([
+          { id: 't-ut-1', titulo: 'Oração', horario: '07:30', feito: false },
+          { id: 't-ut-2', titulo: 'Café da manhã', horario: '08:00', feito: false },
+          { id: 't-ut-3', titulo: 'Trabalho / Afazeres', horario: '09:00', feito: false },
+          { id: 't-ut-4', titulo: 'Almoço', horario: '12:00', feito: false },
+          { id: 't-ut-5', titulo: 'Organização / Projetos', horario: '14:00', feito: false },
+          { id: 't-ut-6', titulo: 'Caminhada / Cuidados pessoais', horario: '17:00', feito: false },
+          { id: 't-ut-7', titulo: 'Jantar / Culto', horario: '19:00', feito: false },
+          { id: 't-ut-8', titulo: 'Oração e dormir', horario: '22:30', feito: false }
+        ]);
+      }
+
+      if (perfil === 'Enzo') {
+        if (ehDomingo || ehSabado) {
+          return ordenarItensPorHorario([
+            { id: 'ez-fds-1', titulo: 'Café da manhã', horario: '08:30', feito: false },
+            { id: 'ez-fds-2', titulo: 'Brincar / Atividade ao ar livre', horario: '10:00', feito: false },
+            { id: 'ez-fds-3', titulo: 'Almoço', horario: '12:00', feito: false },
+            { id: 'ez-fds-4', titulo: 'Leitura / Desenho / Música', horario: '15:00', feito: false },
+            { id: 'ez-fds-5', titulo: 'Jantar', horario: '18:30', feito: false },
+            { id: 'ez-fds-6', titulo: 'Hora de dormir', horario: '21:00', feito: false }
+          ]);
+        }
+        return ordenarItensPorHorario([
+          { id: 'ez-ut-1', titulo: 'Café da manhã', horario: '07:30', feito: false },
+          { id: 'ez-ut-2', titulo: 'Escola / Atividades', horario: '08:30', feito: false },
+          { id: 'ez-ut-3', titulo: 'Almoço', horario: '12:00', feito: false },
+          { id: 'ez-ut-4', titulo: 'Lição de casa / Leitura', horario: '14:30', feito: false },
+          { id: 'ez-ut-5', titulo: 'Tempo livre / Esporte', horario: '16:30', feito: false },
+          { id: 'ez-ut-6', titulo: 'Jantar', horario: '18:30', feito: false },
+          { id: 'ez-ut-7', titulo: 'Hora de dormir', horario: '21:00', feito: false }
+        ]);
+      }
+
+      if (perfil === 'Ester') {
+        if (ehDomingo || ehSabado) {
+          return ordenarItensPorHorario([
+            { id: 'es-fds-1', titulo: 'Café da manhã', horario: '08:30', feito: false },
+            { id: 'es-fds-2', titulo: 'Passeio / Família', horario: '10:00', feito: false },
+            { id: 'es-fds-3', titulo: 'Almoço', horario: '12:00', feito: false },
+            { id: 'es-fds-4', titulo: 'Leitura / Música / Criatividade', horario: '15:00', feito: false },
+            { id: 'es-fds-5', titulo: 'Jantar', horario: '18:30', feito: false },
+            { id: 'es-fds-6', titulo: 'Hora de dormir', horario: '21:15', feito: false }
+          ]);
+        }
+        return ordenarItensPorHorario([
+          { id: 'es-ut-1', titulo: 'Café da manhã', horario: '07:30', feito: false },
+          { id: 'es-ut-2', titulo: 'Escola / Atividades', horario: '08:30', feito: false },
+          { id: 'es-ut-3', titulo: 'Almoço', horario: '12:00', feito: false },
+          { id: 'es-ut-4', titulo: 'Estudos / Leitura', horario: '14:30', feito: false },
+          { id: 'es-ut-5', titulo: 'Música / Atividade física', horario: '16:30', feito: false },
+          { id: 'es-ut-6', titulo: 'Jantar', horario: '18:30', feito: false },
+          { id: 'es-ut-7', titulo: 'Hora de dormir', horario: '21:15', feito: false }
+        ]);
+      }
+
+      // Estela
+      if (ehDomingo || ehSabado) {
+        return ordenarItensPorHorario([
+          { id: 'st-fds-1', titulo: 'Café da manhã', horario: '08:30', feito: false },
+          { id: 'st-fds-2', titulo: 'Brincadeiras / Família', horario: '10:00', feito: false },
+          { id: 'st-fds-3', titulo: 'Almoço', horario: '12:00', feito: false },
+          { id: 'st-fds-4', titulo: 'Descanso / Histórias', horario: '14:30', feito: false },
+          { id: 'st-fds-5', titulo: 'Jantar', horario: '18:30', feito: false },
+          { id: 'st-fds-6', titulo: 'Hora de dormir', horario: '20:30', feito: false }
+        ]);
+      }
+      return ordenarItensPorHorario([
+        { id: 'st-ut-1', titulo: 'Café da manhã', horario: '07:45', feito: false },
+        { id: 'st-ut-2', titulo: 'Escola / Atividades', horario: '08:30', feito: false },
+        { id: 'st-ut-3', titulo: 'Almoço', horario: '12:00', feito: false },
+        { id: 'st-ut-4', titulo: 'Descanso / Histórias', horario: '14:00', feito: false },
+        { id: 'st-ut-5', titulo: 'Brincar / Atividades leves', horario: '16:00', feito: false },
+        { id: 'st-ut-6', titulo: 'Jantar', horario: '18:30', feito: false },
+        { id: 'st-ut-7', titulo: 'Hora de dormir', horario: '20:30', feito: false }
+      ]);
+    }
+
+    // =========================================================================
+    // ESTADO E PERSISTÊNCIA EM LOCALSTORAGE
+    // =========================================================================
+    let estado = {
+      perfilAtual: 'Renan',
+      dataAtualISO: DATA_INICIAL_ISO,
+      abaAtiva: 'atividades',
+      registros: {}
+    };
+
+    let itemEditandoHorarioId = null;
+
+    function carregarEstado() {
+      try {
+        const bruto = localStorage.getItem(STORAGE_KEY);
+        if (!bruto) return;
+        const parsed = JSON.parse(bruto);
+        if (parsed && typeof parsed === 'object') {
+          const perfilNormalizado = normalizarNomePerfil(parsed.perfilAtual);
+          if (perfilNormalizado) {
+            estado.perfilAtual = perfilNormalizado;
+          }
+          if (typeof parsed.dataAtualISO === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(parsed.dataAtualISO)) {
+            estado.dataAtualISO = parsed.dataAtualISO;
+          }
+          estado.registros = normalizarRegistros(parsed.registros);
+          salvarEstado();
+        }
+      } catch (erro) {
+        console.error('Erro ao carregar dados do localStorage:', erro);
+      }
+    }
+
+    function salvarEstado() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(estado));
+      } catch (erro) {
+        console.error('Erro ao salvar dados no localStorage:', erro);
+      }
+    }
+
+    function obterRegistroDia(perfil, dataISO) {
+      if (!estado.registros[perfil]) {
+        estado.registros[perfil] = {};
+      }
+      if (!estado.registros[perfil][dataISO]) {
+        const dataObj = parseDataISO(dataISO);
+        const base = obterRotinaBase(perfil, dataObj.getDay()).map((item, idx) => ({
+          ...item,
+          id: `${dataISO}-${idx}-${Math.random().toString(36).slice(2, 6)}`
+        }));
+        estado.registros[perfil][dataISO] = {
+          itens: base,
+          observacao: ''
+        };
+        salvarEstado();
+      } else {
+        estado.registros[perfil][dataISO].itens = ordenarItensPorHorario(
+          estado.registros[perfil][dataISO].itens || []
+        );
+      }
+      return estado.registros[perfil][dataISO];
+    }
+
+    // =========================================================================
+    // FUNÇÕES DE DATA
+    // =========================================================================
+    function parseDataISO(dataISO) {
+      const [ano, mes, dia] = dataISO.split('-').map(Number);
+      return new Date(ano, mes - 1, dia, 12, 0, 0);
+    }
+
+    function formatarDataISO(dateObj) {
+      const ano = dateObj.getFullYear();
+      const mes = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const dia = String(dateObj.getDate()).padStart(2, '0');
+      return `${ano}-${mes}-${dia}`;
+    }
+
+    function formatarDataCurtaBR(dataISO) {
+      const d = parseDataISO(dataISO);
+      const dia = String(d.getDate()).padStart(2, '0');
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const ano = d.getFullYear();
+      return `${dia}/${mes}/${ano}`;
+    }
+
+    function obterNomeDiaSemana(dataISO) {
+      const d = parseDataISO(dataISO);
+      return DIAS_SEMANA_PT[d.getDay()];
+    }
+
+    function mudarDia(deltaDias) {
+      itemEditandoHorarioId = null;
+      const atual = parseDataISO(estado.dataAtualISO);
+      atual.setDate(atual.getDate() + deltaDias);
+      estado.dataAtualISO = formatarDataISO(atual);
+      salvarEstado();
+      renderizarTudo();
+    }
+
+    // =========================================================================
+    // SELETOR ESTILO RELÓGIO (00 MEIA-NOITE A 23H, MINUTOS DE 5 EM 5 + LIVRE)
+    // =========================================================================
+    function preencherSeletoresRelogio() {
+      const selectHora = document.getElementById('selectHoraRelogio');
+      const selectMinuto = document.getElementById('selectMinutoRelogio');
+
+      selectHora.innerHTML = '';
+      for (let h = 0; h <= 23; h++) {
+        const hh = String(h).padStart(2, '0');
+        const opt = document.createElement('option');
+        opt.value = hh;
+        opt.textContent = h === 0 ? '00 (00h)' : hh;
+        selectHora.appendChild(opt);
+      }
+
+      selectMinuto.innerHTML = '';
+      for (let m = 0; m <= 55; m += 5) {
+        const mm = String(m).padStart(2, '0');
+        const opt = document.createElement('option');
+        opt.value = mm;
+        opt.textContent = mm;
+        selectMinuto.appendChild(opt);
+      }
+
+      selectHora.value = '08';
+      selectMinuto.value = '00';
+    }
+
+    function sincronizarCampoLivreComRelogio() {
+      const h = document.getElementById('selectHoraRelogio').value;
+      const m = document.getElementById('selectMinutoRelogio').value;
+      document.getElementById('inputHorarioLivre').value = `${h}:${m}`;
+    }
+
+    // =========================================================================
+    // RENDERIZAÇÃO
+    // =========================================================================
+    function renderizarPerfis() {
+      const container = document.getElementById('seletorPerfis');
+      container.innerHTML = '';
+
+      PERFIS.forEach((nome) => {
+        const ativo = nome === estado.perfilAtual;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', String(ativo));
+        btn.textContent = nome;
+        btn.className = ativo
+          ? 'py-1 px-2 rounded-lg text-xs font-semibold bg-white text-blue-600 shadow-sm transition truncate'
+          : 'py-1 px-2 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition truncate';
+
+        btn.addEventListener('click', () => {
+          itemEditandoHorarioId = null;
+          estado.perfilAtual = nome;
+          salvarEstado();
+          renderizarTudo();
+        });
+
+        container.appendChild(btn);
+      });
+    }
+
+    function renderizarCabecalhoDia(registro) {
+      const d = parseDataISO(estado.dataAtualISO);
+      const ehDomingo = d.getDay() === 0;
+      const nomeDia = DIAS_SEMANA_PT[d.getDay()];
+
+      document.getElementById('textoDataPrincipal').textContent = formatarDataCurtaBR(estado.dataAtualISO);
+
+      const elDiaSemana = document.getElementById('textoDiaSemana');
+      elDiaSemana.textContent = nomeDia;
+      elDiaSemana.className = ehDomingo
+        ? 'text-[11px] font-semibold text-blue-500 truncate mt-0.5'
+        : 'text-[11px] font-medium text-slate-500 truncate mt-0.5';
+
+      document.getElementById('inputDataFiltro').value = estado.dataAtualISO;
+      document.getElementById('nomePerfilResumo').textContent = estado.perfilAtual;
+
+      const total = registro.itens.length;
+      const feitos = registro.itens.filter((i) => i.feito).length;
+      const pct = total > 0 ? Math.round((feitos / total) * 100) : 0;
+
+      document.getElementById('contadorProgresso').textContent = `${feitos} de ${total} feitos (${pct}%)`;
+      document.getElementById('barraProgresso').style.width = `${pct}%`;
+    }
+
+    /**
+     * Renderiza cada atividade ou ocorrência com espaçamento vertical compacto,
+     * separação visual clara antes do horário e edição inline ao clicar no título ou no horário.
+     */
+    function renderizarListaItens(registro) {
+      const lista = document.getElementById('listaItensDia');
+      lista.innerHTML = '';
+
+      if (registro.itens.length === 0) {
+        lista.innerHTML = `
+          <div class="px-3.5 py-5 text-center text-xs sm:text-sm text-slate-500">
+            Nenhuma atividade cadastrada neste dia. Clique em <strong>+ Nova ocorrência</strong> para adicionar.
+          </div>
+        `;
+        return;
+      }
+
+      registro.itens.forEach((item) => {
+        if (typeof item.observacao !== 'string') {
+          item.observacao = '';
+        }
+
+        const linha = document.createElement('div');
+        linha.className = `flex items-center justify-between gap-2 px-3 py-1.5 transition hover:bg-slate-50/80 ${
+          item.feito ? 'item-concluido bg-slate-50/40' : ''
+        }`;
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = Boolean(item.feito);
+        checkbox.className = 'check-rotina';
+        checkbox.addEventListener('change', () => {
+          item.feito = checkbox.checked;
+          salvarEstado();
+          renderizarCabecalhoDia(registro);
+          renderizarListaItens(registro);
+          renderizarPainelHistorico(registro);
+        });
+
+        // Atividade à esquerda, horário logo após e campo de observação própria da ocorrência à direita
+        const linhaTexto = document.createElement('div');
+        linhaTexto.className = 'grid grid-cols-12 items-center gap-2 flex-1 min-w-0 leading-snug';
+
+        const colunaAtividade = document.createElement('div');
+        colunaAtividade.className = 'col-span-5 sm:col-span-5 min-w-0 pr-2';
+
+        const titulo = document.createElement('span');
+        titulo.className = 'titulo-rotina text-[13px] font-medium text-slate-800 break-words cursor-pointer hover:text-blue-700';
+        titulo.title = 'Clique para editar o nome';
+        titulo.textContent = item.titulo;
+        titulo.addEventListener('click', (evento) => {
+          evento.preventDefault();
+          evento.stopPropagation();
+
+          const inputEdicaoTitulo = document.createElement('input');
+          inputEdicaoTitulo.type = 'text';
+          inputEdicaoTitulo.value = item.titulo;
+          inputEdicaoTitulo.className =
+            'w-full min-w-0 rounded-md border border-blue-400 bg-white px-2 py-0.5 text-[13px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500';
+
+          let finalizado = false;
+          const salvarTitulo = () => {
+            if (finalizado) return;
+            finalizado = true;
+            const novoTitulo = inputEdicaoTitulo.value.trim();
+            if (novoTitulo) {
+              item.titulo = novoTitulo;
+              salvarEstado();
+            }
+            renderizarListaItens(registro);
+            renderizarPainelHistorico(registro);
+          };
+
+          const cancelarTitulo = () => {
+            if (finalizado) return;
+            finalizado = true;
+            renderizarListaItens(registro);
+          };
+
+          inputEdicaoTitulo.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              salvarTitulo();
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              cancelarTitulo();
+            }
+          });
+          inputEdicaoTitulo.addEventListener('blur', salvarTitulo);
+
+          titulo.replaceWith(inputEdicaoTitulo);
+          inputEdicaoTitulo.focus();
+          inputEdicaoTitulo.select();
+        });
+
+        colunaAtividade.appendChild(titulo);
+
+        const colunaHorario = document.createElement('div');
+        colunaHorario.className = 'col-span-2 sm:col-span-2 flex justify-center shrink-0';
+
+        const horarioSpan = document.createElement('span');
+        horarioSpan.className =
+          'text-[11px] font-medium text-slate-600 hover:text-blue-600 bg-slate-100/90 hover:bg-blue-50 px-2 py-0.5 rounded-md cursor-pointer transition text-center whitespace-nowrap';
+        horarioSpan.title = 'Clique para editar o horário (00–23h, 5/5 min ou livre)';
+        horarioSpan.textContent = item.horario || '+ hora';
+
+        horarioSpan.addEventListener('click', (evento) => {
+          evento.preventDefault();
+          evento.stopPropagation();
+
+          const inputEdicaoHora = document.createElement('input');
+          inputEdicaoHora.type = 'text';
+          inputEdicaoHora.inputMode = 'numeric';
+          inputEdicaoHora.setAttribute('list', 'opcoesHorarioRelogio');
+          inputEdicaoHora.value = item.horario || '';
+          inputEdicaoHora.placeholder = '08:00';
+          inputEdicaoHora.className =
+            'w-16 sm:w-20 rounded-md border border-blue-400 bg-white px-1.5 py-0.5 text-[11px] font-medium text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-blue-500';
+
+          let finalizado = false;
+          const salvarHora = () => {
+            if (finalizado) return;
+            finalizado = true;
+            item.horario = normalizarHorarioTexto(inputEdicaoHora.value);
+            registro.itens = ordenarItensPorHorario(registro.itens);
+            salvarEstado();
+            renderizarListaItens(registro);
+            renderizarPainelHistorico(registro);
+          };
+
+          const cancelarHora = () => {
+            if (finalizado) return;
+            finalizado = true;
+            renderizarListaItens(registro);
+          };
+
+          inputEdicaoHora.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              salvarHora();
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              cancelarHora();
+            }
+          });
+          inputEdicaoHora.addEventListener('blur', salvarHora);
+
+          horarioSpan.replaceWith(inputEdicaoHora);
+          inputEdicaoHora.focus();
+          inputEdicaoHora.select();
+        });
+
+        colunaHorario.appendChild(horarioSpan);
+
+        const colunaObservacaoItem = document.createElement('div');
+        colunaObservacaoItem.className = 'col-span-5 sm:col-span-5 min-w-0';
+
+        const inputObsItem = document.createElement('input');
+        inputObsItem.type = 'text';
+        inputObsItem.value = item.observacao || '';
+        inputObsItem.placeholder = 'Escreva observações...';
+        inputObsItem.ariaLabel = `Observação de ${item.titulo}`;
+        inputObsItem.className =
+          'w-full min-w-0 rounded-full border border-slate-200 bg-white px-3 py-0.5 text-[11px] text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 transition';
+
+        inputObsItem.addEventListener('input', () => {
+          item.observacao = inputObsItem.value;
+          salvarEstado();
+        });
+
+        colunaObservacaoItem.appendChild(inputObsItem);
+
+        linhaTexto.appendChild(colunaAtividade);
+        linhaTexto.appendChild(colunaHorario);
+        linhaTexto.appendChild(colunaObservacaoItem);
+
+        linha.appendChild(checkbox);
+        linha.appendChild(linhaTexto);
+
+        const btnExcluir = document.createElement('button');
+        btnExcluir.type = 'button';
+        btnExcluir.setAttribute('aria-label', `Remover ${item.titulo}`);
+        btnExcluir.className = 'text-[11px] text-slate-400 hover:text-red-600 px-1.5 py-0.5 rounded-md transition shrink-0';
+        btnExcluir.textContent = '✕';
+        btnExcluir.addEventListener('click', () => {
+          if (itemEditandoHorarioId === item.id) itemEditandoHorarioId = null;
+          registro.itens = registro.itens.filter((i) => i.id !== item.id);
+          salvarEstado();
+          renderizarTudo();
+        });
+
+        linha.appendChild(btnExcluir);
+        lista.appendChild(linha);
+      });
+    }
+
+    function renderizarObservacao(registro) {
+      document.getElementById('textareaObservacao').value = registro.observacao || '';
+    }
+
+    function renderizarPainelFeitos(registro) {
+      renderizarPainelHistorico(registro);
+    }
+
+    function renderizarPainelHistorico(registro) {
+      document.getElementById('dataResumoFeitos').textContent = formatarDataCurtaBR(estado.dataAtualISO);
+      document.getElementById('nomeHistoricoPerfil').textContent = estado.perfilAtual;
+
+      const feitos = registro.itens.filter((i) => i.feito);
+      document.getElementById('badgeQtdFeitos').textContent =
+        `${feitos.length} ${feitos.length === 1 ? 'feito' : 'feitos'}`;
+
+      const ulFeitos = document.getElementById('listaFeitosDia');
+      ulFeitos.innerHTML = '';
+
+      if (feitos.length === 0) {
+        ulFeitos.innerHTML = `<li class="text-xs sm:text-sm text-slate-400 italic">Nenhum item concluído nesta data.</li>`;
+      } else {
+        feitos.forEach((item) => {
+          const li = document.createElement('li');
+          li.className = 'flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 sm:gap-2 bg-emerald-50/60 border border-emerald-100 rounded-xl px-3 py-1.5';
+          const obsDetalhe = item.observacao && item.observacao.trim().length > 0
+            ? `<div class="text-[11px] text-slate-500 mt-0.5">Obs.: ${escaparHTML(item.observacao.trim())}</div>`
+            : '';
+          li.innerHTML = `
+            <div class="min-w-0">
+              <span class="text-xs sm:text-sm font-medium text-slate-800">✓ ${escaparHTML(item.titulo)}</span>
+              ${obsDetalhe}
+            </div>
+            ${item.horario ? `<span class="text-xs text-slate-500 shrink-0">${escaparHTML(item.horario)}</span>` : ''}
+          `;
+          ulFeitos.appendChild(li);
+        });
+      }
+
+      const caixaObs = document.getElementById('caixaObservacaoResumo');
+      const textoObs = document.getElementById('textoObservacaoResumo');
+      if (registro.observacao && registro.observacao.trim().length > 0) {
+        caixaObs.classList.remove('hidden');
+        textoObs.textContent = registro.observacao.trim();
+      } else {
+        caixaObs.classList.add('hidden');
+        textoObs.textContent = '';
+      }
+
+      const containerHist = document.getElementById('listaHistoricoDias');
+      containerHist.innerHTML = '';
+
+      const mapaPerfil = estado.registros[estado.perfilAtual] || {};
+      const datasOrdenadas = Object.keys(mapaPerfil).sort((a, b) => b.localeCompare(a));
+
+      if (datasOrdenadas.length === 0) {
+        containerHist.innerHTML = `<p class="text-xs text-slate-400">Nenhum registro salvo ainda.</p>`;
+        return;
+      }
+
+      datasOrdenadas.forEach((dataISO) => {
+        const reg = mapaPerfil[dataISO];
+        const qtdFeitos = (reg.itens || []).filter((i) => i.feito).length;
+        const qtdTotal = (reg.itens || []).length;
+        const temObs = Boolean(reg.observacao && reg.observacao.trim().length > 0);
+        const ehSelecionado = dataISO === estado.dataAtualISO;
+        const ehDomingo = parseDataISO(dataISO).getDay() === 0;
+
+        const itemBtn = document.createElement('button');
+        itemBtn.type = 'button';
+        itemBtn.className = `w-full text-left flex items-center justify-between gap-2 px-3 py-2 rounded-xl border transition ${
+          ehSelecionado
+            ? 'border-blue-500 bg-blue-50/70'
+            : 'border-slate-200/80 hover:bg-slate-50'
+        }`;
+
+        itemBtn.innerHTML = `
+          <div>
+            <div class="text-xs sm:text-sm font-semibold text-slate-800">
+              ${escaparHTML(formatarDataCurtaBR(dataISO))}
+              <span class="${ehDomingo ? 'text-blue-500' : 'text-slate-500 font-medium'} ml-1">
+                • ${escaparHTML(obterNomeDiaSemana(dataISO))}
+              </span>
+            </div>
+            <div class="text-[11px] text-slate-500 mt-0.5">
+              ${qtdFeitos} de ${qtdTotal} feitos${temObs ? ' • Com observação' : ''}
+            </div>
+          </div>
+          <span class="text-xs font-semibold text-blue-600">Abrir →</span>
+        `;
+
+        itemBtn.addEventListener('click', () => {
+          itemEditandoHorarioId = null;
+          estado.dataAtualISO = dataISO;
+          estado.abaAtiva = 'atividades';
+          salvarEstado();
+          renderizarTudo();
+        });
+
+        containerHist.appendChild(itemBtn);
+      });
+    }
+
+    function renderizarAbas() {
+      const btnAtividades = document.getElementById('abaAtividades');
+      const btnHistorico = document.getElementById('abaHistorico');
+      const painelAtividades = document.getElementById('painelAtividades');
+      const painelHistorico = document.getElementById('painelHistorico');
+
+      if (estado.abaAtiva === 'atividades') {
+        btnAtividades.className =
+          'flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow-sm transition text-left sm:text-center';
+        btnHistorico.className =
+          'py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition shrink-0';
+        painelAtividades.classList.remove('hidden');
+        painelHistorico.classList.add('hidden');
+      } else {
+        btnHistorico.className =
+          'py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-blue-600 text-white shadow-sm transition shrink-0';
+        btnAtividades.className =
+          'flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition text-left sm:text-center';
+        painelHistorico.classList.remove('hidden');
+        painelAtividades.classList.add('hidden');
+      }
+    }
+
+    function renderizarTudo() {
+      const registro = obterRegistroDia(estado.perfilAtual, estado.dataAtualISO);
+      renderizarPerfis();
+      renderizarCabecalhoDia(registro);
+      renderizarListaItens(registro);
+      renderizarObservacao(registro);
+      renderizarPainelHistorico(registro);
+      renderizarAbas();
+    }
+
+    function escaparHTML(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+
+    // =========================================================================
+    // EVENTOS DA APLICAÇÃO
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      preencherOpcoesRelogio();
+      carregarEstado();
+      renderizarTudo();
+
+      // Navegação dia anterior / próximo
+      document.getElementById('btnDiaAnterior').addEventListener('click', () => mudarDia(-1));
+      document.getElementById('btnDiaSeguinte').addEventListener('click', () => mudarDia(1));
+
+      // Filtro por data
+      document.getElementById('inputDataFiltro').addEventListener('change', (e) => {
+        if (e.target.value) {
+          itemEditandoHorarioId = null;
+          estado.dataAtualISO = e.target.value;
+          salvarEstado();
+          renderizarTudo();
+        }
+      });
+
+      // Botão HOJE (retorna para a data de referência inicial 24/11/2026)
+      document.getElementById('btnHoje').addEventListener('click', () => {
+        itemEditandoHorarioId = null;
+        estado.dataAtualISO = DATA_INICIAL_ISO;
+        salvarEstado();
+        renderizarTudo();
+      });
+
+      // Alternância entre abas Atividades e Histórico
+      document.getElementById('abaAtividades').addEventListener('click', () => {
+        estado.abaAtiva = 'atividades';
+        renderizarAbas();
+      });
+
+      document.getElementById('abaHistorico').addEventListener('click', () => {
+        itemEditandoHorarioId = null;
+        estado.abaAtiva = 'historico';
+        renderizarAbas();
+      });
+
+      // Formulário de nova ocorrência
+      const formNova = document.getElementById('formNovaOcorrencia');
+      const inputTitulo = document.getElementById('inputTituloOcorrencia');
+      const selectHora = document.getElementById('selectHoraRelogio');
+      const selectMinuto = document.getElementById('selectMinutoRelogio');
+      const inputHorarioLivre = document.getElementById('inputHorarioLivre');
+
+      document.getElementById('btnToggleNovaOcorrencia').addEventListener('click', () => {
+        const abrindo = formNova.classList.contains('hidden');
+        formNova.classList.toggle('hidden');
+        if (abrindo) {
+          sincronizarCampoLivreComRelogio();
+          inputTitulo.focus();
+        }
+      });
+
+      selectHora.addEventListener('change', sincronizarCampoLivreComRelogio);
+      selectMinuto.addEventListener('change', sincronizarCampoLivreComRelogio);
+
+      document.getElementById('btnLimparRelogio').addEventListener('click', () => {
+        inputHorarioLivre.value = '';
+        inputHorarioLivre.focus();
+      });
+
+      document.getElementById('btnCancelarOcorrencia').addEventListener('click', () => {
+        formNova.classList.add('hidden');
+        formNova.reset();
+        preencherSeletoresRelogio();
+      });
+
+      formNova.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const titulo = inputTitulo.value.trim();
+        const horarioBruto = inputHorarioLivre.value.trim() || `${selectHora.value}:${selectMinuto.value}`;
+        const horario = normalizarHorarioTexto(horarioBruto);
+        if (!titulo) return;
+
+        const registro = obterRegistroDia(estado.perfilAtual, estado.dataAtualISO);
+        registro.itens.push({
+          id: `${estado.dataAtualISO}-${Date.now()}`,
+          titulo,
+          horario,
+          observacao: '',
+          feito: false
+        });
+        registro.itens = ordenarItensPorHorario(registro.itens);
+
+        salvarEstado();
+        formNova.reset();
+        preencherSeletoresRelogio();
+        sincronizarCampoLivreComRelogio();
+        formNova.classList.add('hidden');
+        renderizarTudo();
+      });
+
+      // Salvamento das observações do dia em localStorage
+      let timerObs = null;
+      const textareaObs = document.getElementById('textareaObservacao');
+      const statusObs = document.getElementById('statusObservacao');
+
+      textareaObs.addEventListener('input', () => {
+        const registro = obterRegistroDia(estado.perfilAtual, estado.dataAtualISO);
+        registro.observacao = textareaObs.value;
+        salvarEstado();
+        renderizarPainelHistorico(registro);
+
+        statusObs.classList.remove('opacity-0');
+        clearTimeout(timerObs);
+        timerObs = setTimeout(() => {
+          statusObs.classList.add('opacity-0');
+        }, 1200);
+      });
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch((erro) => {
+            console.error('Erro ao registrar Service Worker:', erro);
+          });
+        });
+      }
+    });
+  </script>
+</body>
+</html>
